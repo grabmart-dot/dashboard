@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GrabMart South Sumatra — KPI Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ LOADING OVERLAY ============ -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loader-content">
+      <div class="loader-rings">
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+        <div class="ring ring-3"></div>
+        <div class="loader-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M16 3L28 9.5V22.5L16 29L4 22.5V9.5L16 3Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <circle cx="16" cy="16" r="4" fill="currentColor"/>
+          </svg>
+        </div>
+      </div>
+      <p class="loader-text">Fetching KPI Data<span class="dots"></span></p>
+      <div class="loader-progress">
+        <div class="loader-bar" id="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ STICKY NAVBAR ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo">
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <path d="M16 3L28 9.5V22.5L16 29L4 22.5V9.5L16 3Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <circle cx="16" cy="16" r="4" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="nav-title-group">
+        <span class="nav-title">GRABMART</span>
+        <span class="nav-sub">South Sumatra · KPI Dashboard</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-status" id="nav-refresh-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="status-text" id="status-text">Connecting…</span>
+      </div>
+      <button class="btn-theme" id="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+      <button class="btn-refresh" id="manual-refresh">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </nav>
+
+  <!-- ============ MAIN WRAPPER ============ -->
+  <main class="main-wrapper">
+
+    <!-- ===== HEADER ===== -->
+    <header class="page-header">
+      <div class="header-left">
+        <div class="header-badge">LIVE DASHBOARD</div>
+        <h1 class="header-title">GRABMART SOUTH SUMATRA<br><span class="header-title-accent">KPI DASHBOARD</span></h1>
+        <p class="header-desc">Real-time performance monitoring · Account Manager metrics</p>
+      </div>
+      <div class="header-right">
+        <div class="datetime-card">
+          <div class="datetime-date" id="current-date">—</div>
+          <div class="datetime-time" id="current-time">—</div>
+          <div class="datetime-next-refresh">
+            Next refresh: <span id="countdown">5:00</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== FILTERS ===== -->
+    <section class="filters-section" id="filters">
+      <div class="filter-group">
+        <label class="filter-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Search AM
+        </label>
+        <input type="text" id="search-am" class="filter-input" placeholder="Type AM name…" />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          Date
+        </label>
+        <input type="date" id="filter-date" class="filter-input" />
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          Area
+        </label>
+        <select id="filter-area" class="filter-input">
+          <option value="">All Areas</option>
+        </select>
+      </div>
+      <button class="btn-clear-filter" id="clear-filters">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        Clear
+      </button>
+    </section>
+
+    <!-- ===== SECTION 1: KPI CARDS ===== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-num">01</span>
+          KPI Summary
+        </h2>
+        <span class="section-tag" id="last-updated-tag">—</span>
+      </div>
+      <div class="kpi-grid" id="kpi-grid">
+        <!-- Skeleton cards -->
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 2: PERFORMANCE TABLES ===== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-num">02</span>
+          Performance Rankings
+        </h2>
+      </div>
+      <div class="tables-grid">
+        <!-- Top Performers -->
+        <div class="table-card">
+          <div class="table-header top-header">
+            <div class="table-header-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <span>Top Performers</span>
+            <span class="table-badge badge-green">★ Champions</span>
+          </div>
+          <div class="table-wrap">
+            <table class="perf-table" id="top-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>AM Name</th>
+                  <th>Achievement %</th>
+                </tr>
+              </thead>
+              <tbody id="top-table-body">
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Needs Attention -->
+        <div class="table-card">
+          <div class="table-header attn-header">
+            <div class="table-header-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <span>Needs Attention</span>
+            <span class="table-badge badge-red">⚠ Below Target</span>
+          </div>
+          <div class="table-wrap">
+            <table class="perf-table" id="attn-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>AM Name</th>
+                  <th>Achievement %</th>
+                </tr>
+              </thead>
+              <tbody id="attn-table-body">
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+                <tr class="skeleton-row"><td colspan="3"><div class="sk-line"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 3: CHARTS ===== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-num">03</span>
+          Performance Analytics
+        </h2>
+      </div>
+
+      <div class="charts-grid">
+        <!-- Chart 1: Achievement by AM -->
+        <div class="chart-card chart-wide">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Achievement by AM</div>
+            <div class="chart-card-sub">Overall achievement % per Account Manager</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-achievement-am"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: MCA Actual vs Target -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">MCA Actual vs Target</div>
+            <div class="chart-card-sub">Merchant acquisition comparison</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-mca"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 3: Allocation vs Achievement -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Allocation vs Achievement</div>
+            <div class="chart-card-sub">Correlation trend over time</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-allocation"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Basket Size Trend -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Basket Size Trend</div>
+            <div class="chart-card-sub">Average basket value over time</div>
+          </div>
+          <div class="chart-container">
+            <canvas id="chart-basket"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 5: Merchant Acquisition Donut -->
+        <div class="chart-card chart-donut">
+          <div class="chart-card-header">
+            <div class="chart-card-title">Merchant Acquisition</div>
+            <div class="chart-card-sub">Progress towards target</div>
+          </div>
+          <div class="chart-container chart-container-donut">
+            <canvas id="chart-merchant"></canvas>
+            <div class="donut-center" id="donut-center">
+              <div class="donut-pct" id="donut-pct">—%</div>
+              <div class="donut-label">Achieved</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 4: HEATMAP ===== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-num">04</span>
+          Performance Heatmap
+        </h2>
+        <div class="legend-row">
+          <span class="legend-dot dot-green"></span><span>≥100%</span>
+          <span class="legend-dot dot-yellow"></span><span>80–99%</span>
+          <span class="legend-dot dot-red"></span><span>&lt;80%</span>
+        </div>
+      </div>
+      <div class="heatmap-wrap">
+        <div class="table-wrap">
+          <table class="heatmap-table" id="heatmap-table">
+            <thead id="heatmap-thead"></thead>
+            <tbody id="heatmap-tbody">
+              <tr class="skeleton-row"><td colspan="7"><div class="sk-line"></div></td></tr>
+              <tr class="skeleton-row"><td colspan="7"><div class="sk-line"></div></td></tr>
+              <tr class="skeleton-row"><td colspan="7"><div class="sk-line"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 5: EXECUTIVE INSIGHTS ===== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="section-num">05</span>
+          Executive Insights
+        </h2>
+        <span class="section-tag">Auto-generated</span>
+      </div>
+      <div class="insights-grid" id="insights-grid">
+        <div class="insight-card skeleton insight-sk"></div>
+        <div class="insight-card skeleton insight-sk"></div>
+        <div class="insight-card skeleton insight-sk"></div>
+        <div class="insight-card skeleton insight-sk"></div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+      <span>GrabMart South Sumatra · KPI Dashboard</span>
+      <span class="footer-dot">·</span>
+      <span>Auto-refresh every 5 minutes</span>
+      <span class="footer-dot">·</span>
+      <span id="footer-data-source">Data: Google Sheets via Apps Script</span>
+    </footer>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
